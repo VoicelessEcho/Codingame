@@ -2,7 +2,7 @@
   Capture more ghosts than the rival team.
 
 #	Rules
-The game is played on a map **16001** units wide and **9001** units high. The coordinate **X=0**, **Y=0*** is the top left pixel.
+The game is played on a map **16001** units wide and **9001** units high. The coordinate **X=0**, **Y=0** is the top left pixel.
 
 Each player controls a team of several busters. The teams start out at opposite corners of the map, near their base. Ghosts are scattered across the map, and need to be trapped and brought back to a player's base. Each ghost inside the base or trapped by a buster is worth a point for the owner. However, you may lose a point if one of your busters releases a ghost outside of your base.
 

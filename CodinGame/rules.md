@@ -7,7 +7,7 @@ The game is played on a map **16001** units wide and **9001** units high. The co
 Each player controls a team of several busters. The teams start out at opposite corners of the map, near their base. Ghosts are scattered across the map, and need to be trapped and brought back to a player's base. Each ghost inside the base or trapped by a buster is worth a point for the owner. However, you may lose a point if one of your busters releases a ghost outside of your base.
 
 # The map works as follows:
-* There are always 2 teams in play.
+* There are always **2** teams in play.
 * At the start of the game, each player is given a team id. This indicates on which corner their base is positioned. The top left corner **(X=0, Y=0)** is for team **0**. The bottom right corner **( X=16000, Y=9000)** is for team 1.
 * Fog makes it impossible to know the positions of ghosts and rival busters unless they are within **2200** units from one of your own busters.
 * Each buster has a unique id. Each ghost has a unique id. Ghosts and busters with the same id are not correlated.

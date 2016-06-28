@@ -27,15 +27,18 @@ A buster may carry no more than **1** ghost at a time.
 The game ends once all ghosts have been captured or after the time limit of *400* turns.
 
 The game state of every turn is given to you as a list of entities, each with an **id**, **position**, **type**, **state** and **value**.
+
 The **type** will be:
 * **0** for a buster from team **0**.
 * **1** for a buster from team **1**.
 * **-1** for a ghost.
+
 The **state** will be:
 * For busters:
   * **0**: buster not carrying any ghost.
   * **1**: buster carrying a ghost.
 * For ghosts, it is always **0**.
+
 The **value** will be:
 * For busters, if the buster is carrying a ghost, that ghost's **id**, otherwise **-1**.
 * For ghosts, it is **0** unless several busters tied in trying to trap it, in which case it is equal to the amount of busters that attempted to trap it on that turn.

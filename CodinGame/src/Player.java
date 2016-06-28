@@ -67,20 +67,57 @@ class Player {
                 Buster buster = busters.get(i);
                 if (buster.isIdle()){
                     Ghost ghost = getNearestGhost(buster, ghostsMap.values());
+                    if (ghost == null){
+                        Checkpoint checkpoint = map.findNonVisitedNearestCheckpoint(buster);
+                        System.out.println("MOVE " + String.valueOf(checkpoint.getX()) + " " + String.valueOf(checkpoint.getY()) + " " + String.valueOf(buster.getEntityId()));
+                    }
+                    else {
+                        EnemyBuster enemyBuster = getNearestEnemyBuster(buster, enemyBustersMap.values());
+                        if (enemyBuster != null){
+                            if (map.isInReach(buster, ghost, map.getGhostReachMin())){
+                                System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) + " " + String.valueOf(buster.getEntityId()));
+                            }
+                            else {
+                                if (map.isInReach(buster, ghost, map.getGhostReachMax())){
+                                    System.out.println("BUST " + String.valueOf(ghost.getEntityId()) + " " + String.valueOf(buster.getEntityId()));
+                                }
+                                else {
+                                    System.out.println("MOVE " + String.valueOf(ghost.getX()) + " " + String.valueOf(ghost.getY()) + " " + String.valueOf(buster.getEntityId()));
+                                }
+                            }
+                        }
+                        else {
+                            if (map.isInReach(buster, ghost, map.getGhostReachMin())){
+                                System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) +
+                                        " MOVE away from ghost" + String.valueOf(buster.getEntityId()));
+                            }
+                            else {
+                                if (map.isInReach(buster, ghost, map.getGhostReachMax())){
+                                    System.out.println("BUST " + String.valueOf(ghost.getEntityId()) +
+                                            " Trap ghost" + String.valueOf(buster.getEntityId()));
+                                }
+                                else {
+                                    System.out.println("MOVE " + String.valueOf(ghost.getX()) +
+                                            " Move to ghost" + String.valueOf(ghost.getY()) + " " + String.valueOf(buster.getEntityId()));
+                                }
+                            }
+                        }
+                    }
                 }
                 else {
                     if (map.isInReach(buster, home, map.getHomeDist())){
-                        System.out.println("RELEASE");
+                        System.out.println("RELEASE " + " " + String.valueOf(buster.getEntityId()));
                     }
                     else {
-                        System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()));
+                        System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) +
+                                " Going home" + String.valueOf(buster.getEntityId()));
                     }
                 }
 
                 // Write an action using System.out.println()
                 // To debug: System.err.println("Debug messages...");
 
-                System.out.println("MOVE 8000 4500"); // MOVE x y | BUST id | RELEASE
+                //System.out.println("MOVE 8000 4500"); // MOVE x y | BUST id | RELEASE
             }
         }
     }
@@ -93,10 +130,47 @@ class Player {
         Iterator<Ghost> it = ghosts.iterator();
         while (it.hasNext()){
             Ghost tmpGhost = it.next();
-            //int distance = getVectorQ()
+            int distance = calculateSqDistance(buster, tmpGhost);
+            if (distance < dist){
+                dist = distance;
+                ghost = tmpGhost;
+            }
         }
 
         return ghost;
+    }
+
+    private static EnemyBuster getNearestEnemyBuster(Buster buster, Collection<EnemyBuster> enemyBusters) {
+        EnemyBuster enemyBuster = null;
+        int dist = Integer.MAX_VALUE;
+        Iterator<EnemyBuster> it = enemyBusters.iterator();
+        while (it.hasNext()){
+            EnemyBuster tmpEnemy = it.next();
+            int distance = calculateSqDistance(buster, tmpEnemy);
+            if (distance < dist){
+                dist = distance;
+                enemyBuster = tmpEnemy;
+            }
+        }
+
+        return enemyBuster;
+    }
+
+
+
+    private static int calculateSqDistance(Entity e1, int x, int y) {
+        return calculateSqDistance(e1.getX(), e1.getY(), x, y);
+    }
+
+    private static int calculateSqDistance(Entity e1, Entity e2) {
+        return calculateSqDistance(e1.getX(), e1.getY(), e2.getX(), e2.getY());
+    }
+
+    private static int calculateSqDistance(int x1, int y1, int x2, int y2) {
+        int deltaX = x1 - x2;
+        int deltaY = y1 - y2;
+
+        return deltaX * deltaX + deltaY * deltaY;
     }
 
     public static class Buster extends Entity{
@@ -349,7 +423,7 @@ class Player {
             for (int i = 0; i < checkpointsCols; i++){
                 for (int j = 0; j < checkpointsRows; j++) {
                     Checkpoint tmp = checkpoints[j][i];
-                    if (!checkpoint.isVisited()){
+                    if (!tmp.isVisited()){
                         int deltaX = x - tmp.getX();
                         int deltaY = y - tmp.getY();
                         int distTmp = (deltaX * deltaX + deltaY * deltaY);
@@ -377,8 +451,8 @@ class Player {
             for (int i = 0; i < checkpointsRows; i++){
                 for (int j = 0; j < checkpointsCols; j++){
                     Checkpoint tmp = checkpoints[i][j];
-                    int deltaX = x - checkpoint.getX();
-                    int deltaY = y - checkpoint.getY();
+                    int deltaX = x - tmp.getX();
+                    int deltaY = y - tmp.getY();
                     int dist = deltaX * deltaX + deltaY * deltaY;
                     if (dist <= chRadius){
                         checkpoint = tmp;
@@ -386,14 +460,15 @@ class Player {
                     }
                 }
             }
-            return null;
+            return checkpoint;
         }
 
         public boolean isInReach(Entity e1, Entity e2, int dist){
             int deltaX = e1.getX() - e2.getX();
             int deltaY = e1.getY() - e2.getY();
-
-            return (deltaX * deltaX + deltaY * deltaY ) >= dist;
+            System.err.println("Is in reach: " + String.valueOf(e1.entityId) + " " + String.valueOf(e2.entityId) +
+            " " + String.valueOf(deltaX) + " " + String.valueOf(deltaY));
+            return (deltaX * deltaX + deltaY * deltaY ) <= dist;
         }
 
         public int getChHitDistance() {

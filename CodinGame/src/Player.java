@@ -20,8 +20,12 @@ class Player {
             home.setY(9000);
         }
         Map map = new Map(myTeamId);
+        StunCounter stunCounter = new StunCounter();
+
         // game loop
         while (true) {
+            stunCounter.updateTurn();
+            map.clearTargetedCheckpoints();
             int entities = in.nextInt(); // the number of busters and ghosts visible to you
             for (int i = 0; i < entities; i++) {
                 int entityId = in.nextInt(); // buster id or ghost id
@@ -48,6 +52,7 @@ class Player {
                         }
 
                         map.updateCheckpoints((Buster)e);
+                        stunCounter.updateBuster((Buster) e);
 
                         Buster b = (Buster) e;
                         if (!b.isIdle()){
@@ -75,6 +80,7 @@ class Player {
                     Ghost ghost = getNearestGhost(buster, ghostsMap.values());
                     if (ghost == null){
                         Checkpoint checkpoint = map.findNonVisitedNearestCheckpoint(buster);
+                        map.targetCheckpoint(checkpoint);
                         System.out.println("MOVE " + String.valueOf(checkpoint.getX()) + " " + String.valueOf(checkpoint.getY()) + " " + String.valueOf(buster.getEntityId()));
                     }
                     else {
@@ -330,6 +336,7 @@ class Player {
     }
 
     public static class Map{
+        private HashMap<Integer, Checkpoint> targetedCheckpoints;
         private Checkpoint[][] checkpoints;
         private final int checkpointLength = 3110;
         private final int checkpointRadius = 1555;
@@ -344,6 +351,7 @@ class Player {
         private final int ghostReachMin = 810000;
 
         public Map(int teamId) {
+            targetedCheckpoints = new HashMap<>();
             checkpoints = new Checkpoint[checkpointsRows][checkpointsCols];
             if (teamId == 0){
                 fillCheckpoints0();
@@ -353,6 +361,14 @@ class Player {
             }
 
             printCheckpoints();
+        }
+
+        public void clearTargetedCheckpoints(){
+            targetedCheckpoints.clear();
+        }
+
+        public void targetCheckpoint(Checkpoint checkpoint){
+            targetedCheckpoints.put(checkpoint.getEntityId(), checkpoint);
         }
 
         private void printCheckpoints() {
@@ -370,6 +386,7 @@ class Player {
         }
 
         private void fillCheckpoints0() {
+            int chkId = -10;
             for (int i = 0; i < checkpointsRows; i++){
                 for (int j = 0; j < checkpointsCols; j++){
                     int x = checkpointRadius + j * checkpointLength;
@@ -381,13 +398,15 @@ class Player {
                     if (y > 9000){
                         y = 9000;
                     }
-                    Checkpoint checkpoint = new Checkpoint(x, y, false);
+                    chkId--;
+                    Checkpoint checkpoint = new Checkpoint(chkId, x, y, false);
                     checkpoints[i][j] = checkpoint;
                 }
             }
         }
 
         private void fillCheckpoints1() {
+            int chkId = -10;
             for (int i = 0; i < checkpointsRows; i++){
                 for (int j = 0; j < checkpointsCols; j++){
                     int x = 16000 - (checkpointRadius + j * checkpointLength);
@@ -399,7 +418,8 @@ class Player {
                     if (y < 0){
                         y = 0;
                     }
-                    Checkpoint checkpoint = new Checkpoint(x, y, false);
+                    chkId--;
+                    Checkpoint checkpoint = new Checkpoint(chkId, x, y, false);
                     checkpoints[i][j] = checkpoint;
                 }
             }
@@ -410,7 +430,7 @@ class Player {
             if (checkpoint != null){
                 int deltaX = buster.getX() - checkpoint.getX();
                 int deltaY = buster.getY() - checkpoint.getY();
-                int dist = deltaX * deltaX + deltaY * deltaY;
+                int dist = calculateSqDistance(buster, checkpoint);
                 if (dist <= chHitDistance){
                     checkpoint.setVisited(true);
                 }
@@ -428,7 +448,7 @@ class Player {
             for (int i = 0; i < checkpointsCols; i++){
                 for (int j = 0; j < checkpointsRows; j++) {
                     Checkpoint tmp = checkpoints[j][i];
-                    if (!tmp.isVisited()){
+                    if (!tmp.isVisited() && !isCheckpointTargeted(tmp)){
                         int deltaX = x - tmp.getX();
                         int deltaY = y - tmp.getY();
                         int distTmp = (deltaX * deltaX + deltaY * deltaY);
@@ -449,6 +469,11 @@ class Player {
                 System.err.println("Returning random checkpoint: " + checkpoint.getX() + "," + checkpoint.getY());
             }
             return checkpoint;
+        }
+
+        private boolean isCheckpointTargeted(Checkpoint tmp) {
+            Checkpoint checkpoint = targetedCheckpoints.get(tmp.getEntityId());
+            return checkpoint != null;
         }
 
         private Checkpoint findCheckpoint(int x, int y) {
@@ -521,12 +546,13 @@ class Player {
         }
     }
 
-    public static class Checkpoint{
+    public static class Checkpoint extends Entity{
         private int x;
         private int y;
         private boolean visited;
 
-        public Checkpoint(int x, int y, boolean visited) {
+        public Checkpoint(int checkpointId, int x, int y, boolean visited) {
+            super(checkpointId, 11);
             this.x = x;
             this.y = y;
             this.visited = visited;
@@ -554,6 +580,41 @@ class Player {
 
         public void setVisited(boolean visited) {
             this.visited = visited;
+        }
+    }
+
+    public static class StunCounter{
+        private int currentTurn;
+        private HashMap<Integer, Integer> stuns;
+
+        public StunCounter() {
+            currentTurn = 0;
+            stuns = new HashMap<>();
+
+        }
+
+        public void updateTurn(){
+            currentTurn++;
+        }
+
+        public int getCurrentTurn() {
+            return currentTurn;
+        }
+
+        public void updateBuster(Buster buster){
+            Integer stunTurn = stuns.get(buster.getEntityId());
+            if (stunTurn == null){
+                stuns.put(buster.getEntityId(), currentTurn);
+            }
+            stunTurn = stuns.get(buster.getEntityId());
+        }
+
+        public void useStun(Buster buster){
+            stuns.put(buster.getEntityId(), currentTurn + 20);
+        }
+
+        public boolean isStunAvailable(Buster buster){
+            return stuns.get(buster.getEntityId()) <= currentTurn;
         }
     }
 }

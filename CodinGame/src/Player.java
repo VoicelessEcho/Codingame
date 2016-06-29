@@ -48,6 +48,12 @@ class Player {
                         }
 
                         map.updateCheckpoints((Buster)e);
+
+                        Buster b = (Buster) e;
+                        if (!b.isIdle()){
+                            ghostsMap.remove(b.getValue());
+                        }
+
                     }
                     else {
                         e = enemyBustersMap.get(entityId);
@@ -97,8 +103,7 @@ class Player {
                                             " Trap ghost" + String.valueOf(buster.getEntityId()));
                                 }
                                 else {
-                                    System.out.println("MOVE " + String.valueOf(ghost.getX()) +
-                                            " Move to ghost" + String.valueOf(ghost.getY()) + " " + String.valueOf(buster.getEntityId()));
+                                    System.out.println("MOVE " + String.valueOf(ghost.getX()) + " " + String.valueOf(ghost.getY()) + " Move to ghost" + String.valueOf(buster.getEntityId()));
                                 }
                             }
                         }

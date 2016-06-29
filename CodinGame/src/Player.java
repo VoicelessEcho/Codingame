@@ -14,6 +14,8 @@ class Player {
         HashMap<Integer, Buster> bustersMap = new HashMap<>();
         HashMap<Integer, Ghost> ghostsMap = new HashMap<>();
         HashMap<Integer, EnemyBuster> enemyBustersMap = new HashMap<>();
+        HashMap<Integer, Ghost> targetedGhostsMap = new HashMap<>();
+        HashMap<Integer, EnemyBuster> targetedEnemyBusters = new HashMap<>();
         Home home = new Home(0, 0);
         if (myTeamId == 1){
             home.setX(16000);
@@ -26,6 +28,8 @@ class Player {
         while (true) {
             stunCounter.updateTurn();
             map.clearTargetedCheckpoints();
+            targetedEnemyBusters.clear();
+            targetedGhostsMap.clear();
             int entities = in.nextInt(); // the number of busters and ghosts visible to you
             for (int i = 0; i < entities; i++) {
                 int entityId = in.nextInt(); // buster id or ghost id
@@ -78,38 +82,57 @@ class Player {
                 Buster buster = busters.get(i);
                 if (buster.isIdle()){
                     Ghost ghost = getNearestGhost(buster, ghostsMap.values());
+                    List<Ghost> nonTargetedGhosts = getNonTargetedGhosts(ghostsMap, targetedGhostsMap);
                     if (ghost == null){
-                        Checkpoint checkpoint = map.findNonVisitedNearestCheckpoint(buster);
-                        map.targetCheckpoint(checkpoint);
-                        System.out.println("MOVE " + String.valueOf(checkpoint.getX()) + " " + String.valueOf(checkpoint.getY()) + " " + String.valueOf(buster.getEntityId()));
+                        //No ghosts around
+                        List<EnemyBuster> enemyBusters = getEnemyBustersWithGhosts(enemyBustersMap);
+                        EnemyBuster enemyBuster = getNearestNonTargetedEnemyBuster(buster, enemyBusters, targetedEnemyBusters);
+                        if (enemyBuster != null && map.isInReach(buster, enemyBuster, map.getGhostReachMax())){
+                            //Suitable enemy with ghost found
+                            targetedEnemyBusters.put(enemyBuster.getEntityId(), enemyBuster);
+                            System.out.println("STUN " + String.valueOf(enemyBuster.getEntityId()) + " Stun enemy " + String.valueOf(enemyBuster.getEntityId()));
+                        }
+                        else{
+                            Checkpoint checkpoint = map.findNonVisitedNearestCheckpoint(buster);
+                            map.targetCheckpoint(checkpoint);
+                            System.out.println("MOVE " + String.valueOf(checkpoint.getX()) + " " + String.valueOf(checkpoint.getY()) + " " + String.valueOf(buster.getEntityId()));
+                        }
                     }
                     else {
-                        EnemyBuster enemyBuster = getNearestEnemyBuster(buster, enemyBustersMap.values());
-                        if (enemyBuster != null){
+                        //Ghost around
+                        List<EnemyBuster> enemyBusters = getEnemyBustersWithGhosts(enemyBustersMap);
+                        EnemyBuster enemyBuster = getNearestNonTargetedEnemyBuster(buster, enemyBusters, targetedEnemyBusters);
+                        if (enemyBuster != null && map.isInReach(buster, enemyBuster, map.getGhostReachMax())){
+                            //Suitable enemy with ghost found
+                            targetedEnemyBusters.put(enemyBuster.getEntityId(), enemyBuster);
+                            System.out.println("STUN " + String.valueOf(enemyBuster.getEntityId()) + " Stun enemy " + String.valueOf(enemyBuster.getEntityId()));
+                        }
+                        else {
+                            //No suitable enemy with ghost
                             if (map.isInReach(buster, ghost, map.getGhostReachMin())){
+                                //Ghost is too close
                                 System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) + " " + String.valueOf(buster.getEntityId()));
+                                List<Ghost> nonTargetedInHitDistGhosts = getGhostsInReach(buster, nonTargetedGhosts, map);
+                                if (nonTargetedInHitDistGhosts.size() != 0){
+                                    //Suitable other ghost
+
+                                    Ghost otherGhost = getNearestGhost(buster, nonTargetedInHitDistGhosts);
+                                    targetedGhostsMap.put(otherGhost.getEntityId(), otherGhost);
+                                    System.out.println("BUST " + String.valueOf(otherGhost.getEntityId()) + " " + String.valueOf(buster.getEntityId()) +  " Trap ghost " + String.valueOf(otherGhost.getEntityId()));
+                                }
+                                else {
+                                    //no other suitable ghost
+                                    System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) + " " + String.valueOf(buster.getEntityId()));
+                                }
                             }
                             else {
+                                //Ghost is ! too close
                                 if (map.isInReach(buster, ghost, map.getGhostReachMax())){
-                                    System.out.println("BUST " + String.valueOf(ghost.getEntityId()) + " " + String.valueOf(buster.getEntityId()));
+                                    //Ghost in hit distance
+                                    System.out.println("BUST " + String.valueOf(ghost.getEntityId()) + " " + String.valueOf(buster.getEntityId()) + " Trap ghost " + String.valueOf(ghost.getEntityId()));
                                 }
                                 else {
                                     System.out.println("MOVE " + String.valueOf(ghost.getX()) + " " + String.valueOf(ghost.getY()) + " " + String.valueOf(buster.getEntityId()));
-                                }
-                            }
-                        }
-                        else {
-                            if (map.isInReach(buster, ghost, map.getGhostReachMin())){
-                                System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) +
-                                        " MOVE away from ghost" + String.valueOf(buster.getEntityId()));
-                            }
-                            else {
-                                if (map.isInReach(buster, ghost, map.getGhostReachMax())){
-                                    System.out.println("BUST " + String.valueOf(ghost.getEntityId()) +
-                                            " Trap ghost" + String.valueOf(buster.getEntityId()));
-                                }
-                                else {
-                                    System.out.println("MOVE " + String.valueOf(ghost.getX()) + " " + String.valueOf(ghost.getY()) + " Move to ghost" + String.valueOf(buster.getEntityId()));
                                 }
                             }
                         }
@@ -133,6 +156,45 @@ class Player {
         }
     }
 
+    private static List<Ghost> getGhostsInReach(Buster buster, Collection<Ghost> ghosts, Map map){
+        List<Ghost> list = new ArrayList<>();
+        Iterator<Ghost> it = ghosts.iterator();
+        while (it.hasNext()){
+            Ghost g = it.next();
+            if (!map.isInReach(buster, g, map.getGhostReachMin()) && map.isInReach(buster, g, map.getGhostReachMax())){
+                list.add(g);
+            }
+        }
+
+        return list;
+    }
+
+    private static List<Ghost> getNonTargetedGhosts(HashMap<Integer, Ghost> ghostMap, HashMap<Integer, Ghost> targetedGhostMap) {
+        List<Ghost> list = new ArrayList<>();
+        Iterator<Integer> it = ghostMap.keySet().iterator();
+        while (it.hasNext()){
+            Integer id = it.next();
+            if (targetedGhostMap.get(id) == null){
+                list.add(ghostMap.get(id));
+            }
+        }
+
+        return list;
+    }
+
+    private static List<EnemyBuster> getEnemyBustersWithGhosts(HashMap<Integer, EnemyBuster> enemyBustersMap) {
+        List<EnemyBuster> list = new ArrayList<>();
+        Iterator<Integer> it = enemyBustersMap.keySet().iterator();
+        while (it.hasNext()){
+            Integer id = it.next();
+            EnemyBuster enemyBuster = enemyBustersMap.get(id);
+            if (enemyBuster.getState() == 1){
+                list.add(enemyBuster);
+            }
+        }
+
+        return list;
+    }
 
 
     private static Ghost getNearestGhost(Buster buster, Collection<Ghost> ghosts) {
@@ -149,6 +211,22 @@ class Player {
         }
 
         return ghost;
+    }
+
+    private static EnemyBuster getNearestNonTargetedEnemyBuster(Buster buster, Collection<EnemyBuster> enemyBusters, HashMap<Integer, EnemyBuster> targetedEnemyBusters) {
+        EnemyBuster enemyBuster = null;
+        int dist = Integer.MAX_VALUE;
+        Iterator<EnemyBuster> it = enemyBusters.iterator();
+        while (it.hasNext()){
+            EnemyBuster tmpEnemy = it.next();
+            int distance = calculateSqDistance(buster, tmpEnemy);
+            if (targetedEnemyBusters.get(tmpEnemy.getEntityId()) == null && distance < dist){
+                dist = distance;
+                enemyBuster = tmpEnemy;
+            }
+        }
+
+        return enemyBuster;
     }
 
     private static EnemyBuster getNearestEnemyBuster(Buster buster, Collection<EnemyBuster> enemyBusters) {
@@ -192,8 +270,11 @@ class Player {
         @Override
         public void printParameters() {
             String stateSt = "idle";
-            if (state != 0){
+            if (state == 1){
                 stateSt = "carrying a ghost";
+            }
+            if (state == 2){
+                stateSt = "stuned";
             }
             System.err.println("Buster " + entityId + "\n" +
                     "x: " + x + "\n" +
@@ -231,8 +312,11 @@ class Player {
         @Override
         public void printParameters() {
             String stateSt = "idle";
-            if (state != 0){
+            if (state == 1){
                 stateSt = "carrying a ghost";
+            }
+            if (state == 2){
+                stateSt = "stuned";
             }
             System.err.println("Enemy " + entityId + "\n" +
                     "x: " + x + "\n" +
@@ -448,6 +532,9 @@ class Player {
             for (int i = 0; i < checkpointsCols; i++){
                 for (int j = 0; j < checkpointsRows; j++) {
                     Checkpoint tmp = checkpoints[j][i];
+                    if (i == checkpointsCols - 1 && j == checkpointsRows - 1){
+                        tmp.setVisited(true);
+                    }
                     if (!tmp.isVisited() && !isCheckpointTargeted(tmp)){
                         int deltaX = x - tmp.getX();
                         int deltaY = y - tmp.getY();

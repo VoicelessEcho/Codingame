@@ -13,11 +13,13 @@ Each player controls a team of several busters. The teams start out at opposite 
 * Each buster has a unique id. Each ghost has a unique id. Ghosts and busters with the same id are not correlated.
 
 # Busters work as follows:
-* Every turn, a buster may do one of the following actions: **MOVE**, **BUST** or **RELEASE**
+* Every turn, a buster may do one of the following actions: **MOVE**, **BUST**, **RELEASE** or **STUN**
 * **MOVE** followed by map coordinates will make the buster advance **800** units towards that point. The position will be rounded to the nearest integer.
 * **BUST** followed by a ghost's id will cause the buster to suck that ghost into his ghost trap if he is within a range of **1760** units around the target ghost but not closer than **900** units. Trapped ghosts are no longer visible on the map.
 A buster may carry no more than **1** ghost at a time.
 * **RELEASE** will cause the buster to drop the ghost he is carrying back onto the map. If this is done within **1600** units of a corner of the map on which a base is positioned, the ghost is removed from play and secures a point for the base's owner.
+* **STUN** followed by a buster's id will make the buster shoot a bolt of lightning that will stun the target buster. A stunned buster cannot do anything for **10** turns. The buster's stun ability must recharge for **20** turns before it can be used again. Being stunned or attempting to stun will cause a buster to release any ghost he may be carrying.
+* A buster may only stun opponents within a **1760** unit radius.
 
 # Ghosts work as follows:
 * Ghosts remain stationary unless busters are within **2200** units of them and they are not in the process of being trapped. In this case, they will move **400** units away from the closest buster. In case of a tie, it'll be the mean position of the busters.
@@ -37,10 +39,12 @@ The **state** will be:
 * For busters:
   * **0**: buster not carrying any ghost.
   * **1**: buster carrying a ghost.
+  * **2**: stunned buster.
 * For ghosts, it is always **0**.
 
 The **value** will be:
 * For busters, if the buster is carrying a ghost, that ghost's **id**, otherwise **-1**.
+* If the buster is stunned the number of turns until he can move again.
 * For ghosts, it is **0** unless several busters tied in trying to trap it, in which case it is equal to the amount of busters that attempted to trap it on that turn.
  
 # Victory Conditions
@@ -70,6 +74,7 @@ The program must first read initialization input and then, within an infinite lo
 * MOVE followed by two integers x and y
 * BUST followed by one integer ghostId
 * RELEASE
+* STUN followed by one integer busterId
 
 You may append text to your instructions, it will be displayed in the viewer.
 

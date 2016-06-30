@@ -15,18 +15,20 @@ Each player controls a team of several busters. The teams start out at opposite 
 # Busters work as follows:
 * Every turn, a buster may do one of the following actions: **MOVE**, **BUST**, **RELEASE** or **STUN**
 * **MOVE** followed by map coordinates will make the buster advance **800** units towards that point. The position will be rounded to the nearest integer.
-* **BUST** followed by a ghost's id will cause the buster to suck that ghost into his ghost trap if he is within a range of **1760** units around the target ghost but not closer than **900** units. Trapped ghosts are no longer visible on the map.
-A buster may carry no more than **1** ghost at a time.
+* **BUST** followed by a ghost's id will cause the buster to target that ghost with his proton stream, causing the ghost to lose **1** stamina point. If the ghost has **0** stamina points, the buster will suck that ghost into his ghost trap. He may do this if he is within a range of **1760** units around the target ghost but not closer than **900** units. Trapped ghosts are no longer visible on the map.
+* A buster may carry no more than **1** ghost at a time.
 * **RELEASE** will cause the buster to drop the ghost he is carrying back onto the map. If this is done within **1600** units of a corner of the map on which a base is positioned, the ghost is removed from play and secures a point for the base's owner.
 * **STUN** followed by a buster's id will make the buster shoot a bolt of lightning that will stun the target buster. A stunned buster cannot do anything for **10** turns. The buster's stun ability must recharge for **20** turns before it can be used again. Being stunned or attempting to stun will cause a buster to release any ghost he may be carrying.
 * A buster may only stun opponents within a **1760** unit radius.
+* Busters will perform their actions simultaneously but any effect the actions have, including movement, are applied at the end of the turn.
 
 # Ghosts work as follows:
 * Ghosts remain stationary unless busters are within **2200** units of them and they are not in the process of being trapped. In this case, they will move **400** units away from the closest buster. In case of a tie, it'll be the mean position of the busters.
-* If several busters attempt to trap a ghost, the team with the most busters will take priority. Within that team, the closest buster will take the ghost. If both teams have an equal number of busters attempting to trap the ghost, it will not be trapped on that turn.
+* If several busters attempt to trap a ghost with **0** stamina, the team with the most busters will take priority. Within that team, the closest buster will take the ghost. If both teams have an equal number of busters attempting to trap the ghost, it will not be trapped on that turn.
 * A ghost being carried by a buster will escape if that buster attempts to trap a different ghost.
+* Stamina does not regenerate.
 
-The game ends once all ghosts have been captured or after the time limit of *400* turns.
+The game ends once all ghosts have been captured or after the time limit of *200* turns.
 
 The game state of every turn is given to you as a list of entities, each with an **id**, **position**, **type**, **state** and **value**.
 
@@ -40,7 +42,9 @@ The **state** will be:
   * **0**: buster not carrying any ghost.
   * **1**: buster carrying a ghost.
   * **2**: stunned buster.
-* For ghosts, it is always **0**.
+  * **3**: buster in the process of trapping a ghost.
+* For ghosts:
+  * For ghosts, it is equal to the ghost's current stamina.
 
 The **value** will be:
 * For busters, if the buster is carrying a ghost, that ghost's **id**, otherwise **-1**.

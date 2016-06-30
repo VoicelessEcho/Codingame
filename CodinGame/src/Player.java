@@ -20,10 +20,10 @@ class Player {
     public static int effectiveBusterHitSQR = 921600;  //(1760-800)^2
     public static int effectiveGhostHitSQR = 1849600;  //(1760-400)^2
     public static int closestGhostHitSQR = 810000;  //900^2
-    public static int checkpointHitSQR = 168100; //410
-    public static int checkpointLength = 1550; //3110;
-    public static int checkpointRadius = 775;  //1555;
-    public static int checkpointRadiusSQR = 600625;
+    public static int checkpointHitSQR = 219024;//168100; //410
+    public static int checkpointLength = 2260;//1550; //3110;
+    public static int checkpointRadius = 1130;//775;  //1555;
+    public static int checkpointRadiusSQR = 1276900;//600625;
     public static int checkpointsRows = 6;
     public static int checkpointsCols = 11;
 
@@ -105,91 +105,8 @@ class Player {
             busters.addAll(bustersMap.values());
             for (int i = 0; i < bustersPerPlayer; i++) {
                 Buster buster = busters.get(i);
-                switch (buster.getState()){
-                    case 0:
-                        //idle
-                        break;
-                    case 1:
-                        //carrying
-                        break;
-                    case 2:
-                        //goingHome
-
-                        break;
-                }
-                /*Buster buster = busters.get(i);
-                if (buster.isIdle()){
-                    Ghost ghost = getNearestGhost(buster, ghostsMap.values());
-                    List<Ghost> nonTargetedGhosts = getNonTargetedGhosts(ghostsMap, targetedGhostsMap);
-                    if (ghost == null){
-                        //No ghosts around
-                        List<EnemyBuster> enemyBusters = getEnemyBustersWithGhosts(enemyBustersMap);
-                        EnemyBuster enemyBuster = getNearestNonTargetedEnemyBuster(buster, enemyBusters, targetedEnemyBusters);
-                        if (enemyBuster != null && isInDistance(buster, enemyBuster, effectiveBusterHitSQR)){
-                            //Suitable enemy with ghost found
-                            targetedEnemyBusters.put(enemyBuster.getEntityId(), enemyBuster);
-                            System.out.println("STUN " + String.valueOf(enemyBuster.getEntityId()) + " Stun enemy " + String.valueOf(enemyBuster.getEntityId()));
-                        }
-                        else{
-                            Checkpoint checkpoint = findNonVisitedNearestCheckpoint(buster, map);
-                            targetedCheckpointsMap.put(checkpoint.getEntityId(), checkpoint);
-                            System.out.println("MOVE " + String.valueOf(checkpoint.getX()) + " " + String.valueOf(checkpoint.getY()) + " " + String.valueOf(buster.getEntityId()));
-                        }
-                    }
-                    else {
-                        //Ghost around
-                        List<EnemyBuster> enemyBusters = getEnemyBustersWithGhosts(enemyBustersMap);
-                        EnemyBuster enemyBuster = getNearestNonTargetedEnemyBuster(buster, enemyBusters, targetedEnemyBusters);
-                        if (enemyBuster != null && isInDistance(buster, enemyBuster, effectiveBusterHitSQR)){
-                            //Suitable enemy with ghost found
-                            targetedEnemyBusters.put(enemyBuster.getEntityId(), enemyBuster);
-                            System.out.println("STUN " + String.valueOf(enemyBuster.getEntityId()) + " Stun enemy " + String.valueOf(enemyBuster.getEntityId()));
-                        }
-                        else {
-                            //No suitable enemy with ghost
-                            if (isInDistance(buster, ghost, closestGhostHitSQR)){
-                                //Ghost is too close
-                                System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) + " " + String.valueOf(buster.getEntityId()));
-                                List<Ghost> nonTargetedInHitDistGhosts = getGhostsInReach(buster, nonTargetedGhosts, map);
-                                if (nonTargetedInHitDistGhosts.size() != 0){
-                                    //Suitable other ghost
-
-                                    Ghost otherGhost = getNearestGhost(buster, nonTargetedInHitDistGhosts);
-                                    targetedGhostsMap.put(otherGhost.getEntityId(), otherGhost);
-                                    System.out.println("BUST " + String.valueOf(otherGhost.getEntityId()) + " " + String.valueOf(buster.getEntityId()) +  " Trap ghost " + String.valueOf(otherGhost.getEntityId()));
-                                }
-                                else {
-                                    //no other suitable ghost
-                                    System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) + " " + String.valueOf(buster.getEntityId()));
-                                }
-                            }
-                            else {
-                                //Ghost is ! too close
-                                if (isInDistance(buster, ghost, effectiveGhostHitSQR)){
-                                    //Ghost in hit distance
-                                    System.out.println("BUST " + String.valueOf(ghost.getEntityId()) + " " + String.valueOf(buster.getEntityId()) + " Trap ghost " + String.valueOf(ghost.getEntityId()));
-                                }
-                                else {
-                                    System.out.println("MOVE " + String.valueOf(ghost.getX()) + " " + String.valueOf(ghost.getY()) + " " + String.valueOf(buster.getEntityId()));
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    if (buster.isCarrying()) {
-                        if (isInDistance(buster, home, homeDistSQR)) {
-                            System.out.println("RELEASE " + " " + String.valueOf(buster.getEntityId()));
-                        } else {
-                            System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) +
-                                    " Going home" + String.valueOf(buster.getEntityId()));
-                        }
-                    }
-                    else {
-                        System.out.println("MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY()) +
-                                " Going home (stunned)" + String.valueOf(buster.getEntityId()));
-                    }
-                }*/
+                DecisionMaker decisionMaker = new DecisionMaker();
+                System.out.println(decisionMaker.getDecision(buster, home, enemyBase, map, stunCounter));
 
                 // Write an action using System.out.println()
                 // To debug: System.err.println("Debug messages...");
@@ -326,6 +243,53 @@ class Player {
         return enemyBuster;
     }
 
+    private static List<EnemyBuster> getEnemyBustersInDistance(Buster buster, Collection<EnemyBuster> enemyBusters, int distSQR){
+        List<EnemyBuster> enemyBustersList = new ArrayList<>();
+        Iterator<EnemyBuster> it = enemyBusters.iterator();
+        while (it.hasNext()){
+            EnemyBuster enemy = it.next();
+            if (isInDistance(buster, enemy, distSQR)){
+                enemyBustersList.add(enemy);
+            }
+        }
+        return enemyBustersList;
+    }
+
+    private static List<EnemyBuster> getEnemyBustersWithGhosts(Collection<EnemyBuster> enemyBusters){
+        List<EnemyBuster> enemyBustersList = new ArrayList<>();
+        Iterator<EnemyBuster> it = enemyBusters.iterator();
+        while (it.hasNext()){
+            EnemyBuster enemy = it.next();
+            if (enemy.getState() == 1){
+                enemyBustersList.add(enemy);
+            }
+        }
+        return enemyBustersList;
+    }
+
+    private static List<EnemyBuster> getEnemyBustersTrapping(Collection<EnemyBuster> enemyBusters){
+        List<EnemyBuster> enemyBustersList = new ArrayList<>();
+        Iterator<EnemyBuster> it = enemyBusters.iterator();
+        while (it.hasNext()){
+            EnemyBuster enemy = it.next();
+            if (enemy.getState() == 3){
+                enemyBustersList.add(enemy);
+            }
+        }
+        return enemyBustersList;
+    }
+
+    private static List<EnemyBuster> getNonTargetedEnemyBusters(Collection<EnemyBuster> enemyBusters){
+        List<EnemyBuster> enemyBustersList = new ArrayList<>();
+        Iterator<EnemyBuster> it = enemyBusters.iterator();
+        while (it.hasNext()){
+            EnemyBuster enemy = it.next();
+            if (targetedEnemyBusters.get(enemy.getEntityId()) == null){
+                enemyBustersList.add(enemy);
+            }
+        }
+        return enemyBustersList;
+    }
 
 
     public static int calculateSqDistance(Entity e1, int x, int y) {
@@ -520,7 +484,207 @@ class Player {
         }
     }
 
+
+    public static class DecisionMaker{
+        public String getDecision(Buster buster, Home home, Home enemyBase, Map map, StunCounter stunCounter){
+            String action = "";
+            switch (buster.getState()){
+                case 0:
+                    //idle
+                    if (stunCounter.isStunAvailable(buster)) {
+                        List<EnemyBuster> enemyBustersInDistance = getEnemyBustersInDistance(buster, enemyBustersMap.values(), effectiveBusterHitSQR);
+                        List<EnemyBuster> enemyBustersWithGhosts = getEnemyBustersWithGhosts(enemyBustersInDistance);
+                        List<EnemyBuster> enemyBustersNonTargeted = getNonTargetedEnemyBusters(enemyBustersWithGhosts);
+                        if (enemyBustersNonTargeted.size() != 0) {
+                            EnemyBuster enemy = getNearestEnemyBuster(buster, enemyBustersNonTargeted);
+                            targetedEnemyBusters.put(enemy.getEntityId(), enemy);
+                            action =  stunEnemy(buster, enemy.getEntityId());
+                        } else {
+                            List<EnemyBuster> enemyBustersTrapping = getEnemyBustersTrapping(enemyBustersNonTargeted);
+                            if (enemyBustersTrapping.size() != 0) {
+                                EnemyBuster enemy = getNearestEnemyBuster(buster, enemyBustersNonTargeted);
+                                targetedEnemyBusters.put(enemy.getEntityId(), enemy);
+                                action =  stunEnemy(buster, enemy.getEntityId());
+                            } else {
+                                action =  findGhost(buster, map);
+                            }
+                        }
+                    }
+                    else {
+                        action = findGhost(buster, map);
+                    }
+                    break;
+                case 1:
+                    //carrying
+                    if (isInDistance(buster, home, homeDistSQR)){
+                        action = releaseGhost(buster);
+                    }
+                    else {
+                        action = moveHome(buster, home);
+                    }
+                    break;
+                case 2:
+                    //stunned
+                    action = tryToMove(buster, home);
+                    break;
+                case 3:
+                    //busting
+                    action = bustGhost(buster, ghostsMap.get(buster.getValue()));
+                    break;
+            }
+
+            return action;
+        }
+
+        private String findGhost(Buster buster, Map map) {
+            if (ghostsMap.size() != 0){
+                //TODO non compete logic
+                Ghost ghost = getNearestGhost(buster, ghostsMap.values());
+                if (isInDistance(buster, ghost, closestGhostHitSQR)){
+                    return moveAwayFromEntity(buster, ghost, 400) + " I'm too close";
+                }
+                else {
+                    if (isInDistance(buster, ghost, effectiveGhostHitSQR)){
+                        return bustGhost(buster, ghost);
+                    }
+                    else {
+                        return moveToEntity(buster, ghost);
+                    }
+                }
+            }
+            else {
+                return findCheckpoint(buster, map);
+            }
+        }
+
+        private String moveAwayFromEntity(Buster buster, Entity entity, int i) {
+            //TODO move away logic
+            int x1 = buster.getX();
+            int y1 = buster.getY();
+            int x2 = entity.getX();
+            int y2 = entity.getY();
+
+            if (x1 >= x2 && y1 >= y2 ){
+                return moveToCoordinates(buster, x2 + 637, y2 + 637) + " 1 ";
+            }
+            else {
+                if (x1 <= x2 && y1 >= y2 ){
+                    return moveToCoordinates(buster, x2 - 637, y2 + 637 ) + " 2 ";
+                }
+                else {
+                    if (x1 >= x2 && y1 <= y2 ){
+                        return moveToCoordinates(buster, x2 + 637, y2 - 637) + " 3 ";
+                    }
+                    else {
+                        if (x1 <= x2 && y1 <= y2 ){
+                            return moveToCoordinates(buster, x2 - 637, y2 - 637) + " 4 ";
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private String findCheckpoint(Buster buster, Map map) {
+            List<Checkpoint> checkpoints = map.getCheckpoints();
+            List<Checkpoint> notVisitedCheckpoints = getNonVisitedCheckpoints(checkpoints);
+            List<Checkpoint> nonTargetedCheckpoints = getNonTargetedCheckpoints(notVisitedCheckpoints);
+            if (nonTargetedCheckpoints.size() != 0){
+                Checkpoint checkpoint = getNearestCheckpoint(buster, nonTargetedCheckpoints);
+                targetedCheckpointsMap.put(checkpoint.getEntityId(), checkpoint);
+                return moveToEntity(buster, checkpoint);
+            }
+            else {
+                Checkpoint checkpoint = map.getRandomCheckpoint();
+                targetedCheckpointsMap.put(checkpoint.getEntityId(), checkpoint);
+                return moveToEntity(buster, checkpoint);
+            }
+        }
+
+        private Checkpoint getNearestCheckpoint(Buster buster, Collection<Checkpoint> checkpoints) {
+            List<Checkpoint> chList = new ArrayList<>();
+            chList.addAll(checkpoints);
+            Checkpoint ch = chList.get(0);
+            int dist = calculateSqDistance(buster, ch);
+
+            for (int i = 1; i < chList.size(); i++){
+                Checkpoint tmp = chList.get(i);
+                int tmpDist = calculateSqDistance(buster, tmp);
+                if (dist > tmpDist){
+                    ch = tmp;
+                }
+            }
+            return ch;
+        }
+
+        private List<Checkpoint> getNonTargetedCheckpoints(Collection<Checkpoint> checkpoints) {
+            List<Checkpoint> list = new ArrayList<>();
+            Iterator<Checkpoint> it = checkpoints.iterator();
+            while (it.hasNext()){
+                Checkpoint checkpoint = it.next();
+                if (targetedCheckpointsMap.get(checkpoint.getEntityId()) == null){
+                    list.add(checkpoint);
+                }
+            }
+
+            return list;        }
+
+        private List<Checkpoint> getNonVisitedCheckpoints(Collection<Checkpoint> checkpoints) {
+            List<Checkpoint> list = new ArrayList<>();
+            Iterator<Checkpoint> it = checkpoints.iterator();
+            while (it.hasNext()){
+                Checkpoint checkpoint = it.next();
+                if (!checkpoint.isVisited()){
+                    list.add(checkpoint);
+                }
+            }
+
+            return list;
+        }
+
+        private String moveToCoordinates(Buster buster, int x, int y){
+            return "MOVE " + String.valueOf(x) + " " +String.valueOf(y);// + " Moving to " + String.valueOf(x) + ";" + String.valueOf(y);
+        }
+
+        private String moveToEntity(Buster buster, Entity entity){
+            return "MOVE " + String.valueOf(entity.getX()) + " " + String.valueOf(entity.getY());// + " Moving to e" + String.valueOf(entity.getEntityId());
+        }
+
+        private String stunEnemy(Buster buster, int enemyId){
+            return "STUN " + String.valueOf(enemyId);// + " Stunning " + String.valueOf(enemyId);
+        }
+
+        private String bustGhost(Buster buster, Ghost ghost) {
+            return "BUST " + String.valueOf(ghost.entityId) + " Bust in " + String.valueOf(ghost.getState());
+        }
+
+        private String moveHome(Buster buster, Home home) {
+            return "MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY());// + " Going home " + String.valueOf(buster.getEntityId());
+        }
+
+        private String releaseGhost(Buster buster) {
+            return "RELEASE";// + " " + String.valueOf(buster.getEntityId()) +"Releasing " + String.valueOf(buster.getValue());
+        }
+
+        private String tryToMove(Buster buster, Home home) {
+            return "MOVE " + String.valueOf(home.getX()) + " " + String.valueOf(home.getY());// + " Stunned " + String.valueOf(buster.getEntityId());
+        }
+    }
+
+
+
     public static class Map{
+        private int[] row0 = {0, 0, 3, 0, 2, 0, 1, 0, 2, 0, 1, 0, 1};
+        private int[] row1 = {0, 3, 0, 2, 0, 2, 0, 2, 0, 1, 0, 1, 0};
+        private int[] row2 = {3, 0, 4, 0, 3, 0, 3, 0, 2, 0, 2, 0, 1};
+        private int[] row3 = {0, 4, 0, 4, 0, 3, 0, 2, 0, 2, 0, 1, 0};
+        private int[] row4 = {2, 0, 3, 0, 3, 0, 2, 0, 2, 0, 1, 0, 1};
+        private int[] row5 = {0, 2, 0, 2, 0, 3, 0, 2, 0, 1, 0, 1, 0};
+        private int[] row6 = {1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0};
+        private int[][] heat = {row0, row1, row2, row3, row4, row5, row6};
+
+        private LinkedHashMap<Integer, Checkpoint> checkpointsMap = new LinkedHashMap<>();
         private Checkpoint[][] checkpoints;
 
         public Map(int teamId, Home home, Home enemyBase) {
@@ -535,7 +699,17 @@ class Player {
             printCheckpoints();
         }
         private void printCheckpoints() {
-            for (int i = 0; i < checkpointsRows; i ++){
+            String x = "X: ";
+            String y = "Y: ";
+            Iterator<Checkpoint> it = checkpointsMap.values().iterator();
+            while (it.hasNext()){
+                Checkpoint checkpoint = it.next();
+                x += String.valueOf(checkpoint.getX()) + " ; ";
+                y += String.valueOf(checkpoint.getY()) + " ; ";
+            }
+
+
+            /*for (int i = 0; i < checkpointsRows; i ++){
                 String x = "";
                 String y = "";
                 for (int j = 0; j < checkpointsCols; j++){
@@ -551,10 +725,36 @@ class Player {
                 }
                 System.err.println(x);
                 System.err.println(y);
-            }
+            }*/
         }
         private void fillCheckpoints0(Home home,Home enemyBase) {
-            int chkId = -10;
+            printHeat();
+
+            int id = -10;
+            for (int i = 0; i < 7; i++){
+                for (int j = 0; j < 13; j++){
+                    int h = heat[i][j];
+                    System.err.println(i + " " + j);
+                    if (h != 0){
+                        id--;
+                        int x = checkpointRadius * (i + 1);
+                        int y = checkpointRadius * (j + 1);
+                        if (x > 16000) {
+                            x = 16000;
+                        }
+                        if (y > 9000){
+                            y = 9000;
+                        }
+                        Checkpoint checkpoint = new Checkpoint(
+                                id,
+                                x,
+                                y,
+                                false);
+                        checkpointsMap.put(id, checkpoint);
+                    }
+                }
+            }
+            /*int chkId = -10;
             for (int i = 0; i < checkpointsRows; i++){
                 for (int j = 0; j < checkpointsCols; j++){
                     int x = checkpointRadius + j * checkpointLength;
@@ -574,10 +774,46 @@ class Player {
                     }
                     checkpoints[i][j] = checkpoint;
                 }
+            }*/
+        }
+
+        private void printHeat() {
+
+            for (int i = 0; i < 7; i++){
+                String line = String.valueOf(i) + ": ";
+                for (int j = 0; j < 13; j++){
+                    line += String.valueOf(heat[i][j]);
+                }
+                System.err.println(line);
             }
         }
+
         private void fillCheckpoints1(Home home, Home enemyBase) {
-            int chkId = -10;
+            int id = -10;
+            for (int i = 0; i < 7; i++){
+                for (int j = 0; j < 13; j++){
+                    int h = heat[i][j];
+                    if (h != 0){
+                        id--;
+                        int x = 16000 - checkpointRadius * (i + 1);
+                        int y = 9000 - checkpointRadius * (j + 1);
+                        if (x < 0) {
+                            x = 0;
+                        }
+                        if (y < 0){
+                            y = 0;
+                        }
+                        Checkpoint checkpoint = new Checkpoint(
+                                id,
+                                x,
+                                y,
+                                false);
+                        checkpointsMap.put(id, checkpoint);
+                    }
+                }
+            }
+
+            /*int chkId = -10;
             for (int i = 0; i < checkpointsRows; i++){
                 for (int j = 0; j < checkpointsCols; j++){
 
@@ -598,7 +834,7 @@ class Player {
                     }
                     checkpoints[i][j] = checkpoint;
                 }
-            }
+            }*/
         }
         public Checkpoint findCurrentCheckpoint(Buster buster){
             for (int i = 0; i < checkpointsRows; i++ ){
@@ -637,6 +873,21 @@ class Player {
                 }
             }
             return checkpointList;
+        }
+
+        public Checkpoint getRandomCheckpoint() {
+            Random random = new Random();
+            boolean gen = true;
+            int i = 0;
+            int j = 0;
+            while (gen){
+                i = random.nextInt(checkpointsRows);
+                j = random.nextInt(checkpointsCols);
+                if (checkpoints[i][j] != null){
+                    gen = false;
+                }
+            }
+            return checkpoints[i][j];
         }
     }
 

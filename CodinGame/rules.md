@@ -47,7 +47,7 @@ The **state** will be:
   * For ghosts, it is equal to the ghost's current stamina.
 
 The **value** will be:
-* For busters, if the buster is carrying a ghost, that ghost's **id**, otherwise **-1**.
+* If the buster is carrying or attempting to trap a ghost, that ghost's id.
 * If the buster is stunned the number of turns until he can move again.
 * For ghosts, it is **0** unless several busters tied in trying to trap it, in which case it is equal to the amount of busters that attempted to trap it on that turn.
  

@@ -675,14 +675,14 @@ class Player {
 
 
     public static class Map{
-        private int[] row0 = {0, 0, 3, 0, 2, 0, 1, 0, 2, 0, 1, 0, 1};
-        private int[] row1 = {0, 3, 0, 2, 0, 2, 0, 2, 0, 1, 0, 1, 0};
-        private int[] row2 = {3, 0, 4, 0, 3, 0, 3, 0, 2, 0, 2, 0, 1};
-        private int[] row3 = {0, 4, 0, 4, 0, 3, 0, 2, 0, 2, 0, 1, 0};
-        private int[] row4 = {2, 0, 3, 0, 3, 0, 2, 0, 2, 0, 1, 0, 1};
-        private int[] row5 = {0, 2, 0, 2, 0, 3, 0, 2, 0, 1, 0, 1, 0};
-        private int[] row6 = {1, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0};
-        private int[][] heat = {row0, row1, row2, row3, row4, row5, row6};
+        private int[] row0 = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+        private int[] row1 = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+        private int[] row2 = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+        private int[] row3 = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+        private int[] row4 = {1, 0, 1, 0, 1, 0, 1, 0, 2, 0, 1, 0, 1};
+        private int[] row5 = {0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0};
+        private int[] row6 = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
+        private int[][] pomts = {row0, row1, row2, row3, row4, row5, row6};
 
         private LinkedHashMap<Integer, Checkpoint> checkpointsMap = new LinkedHashMap<>();
         private Checkpoint[][] checkpoints;
@@ -759,7 +759,6 @@ class Player {
                 for (int j = 0; j < checkpointsCols; j++){
                     int x = checkpointRadius + j * checkpointLength;
                     int y = checkpointRadius + i * checkpointLength;
-
                     if (x > 16000) {
                         x = 16000;
                     }
@@ -816,10 +815,8 @@ class Player {
             /*int chkId = -10;
             for (int i = 0; i < checkpointsRows; i++){
                 for (int j = 0; j < checkpointsCols; j++){
-
                     int x = 16000 - (checkpointRadius + j * checkpointLength);
                     int y = 9000 - (checkpointRadius + i * checkpointLength);
-
                     if (x < 0) {
                         x = 0;
                     }
@@ -892,31 +889,51 @@ class Player {
     }
 
     public static class Checkpoint extends Entity{
+        private int arrX[];
+        private int arrY[];
         private int x;
         private int y;
         private boolean visited;
+        private int type;
 
-        public Checkpoint(int checkpointId, int x, int y, boolean visited) {
-            super(checkpointId, 11);
-            this.x = x;
-            this.y = y;
+        public Checkpoint(int checkpintId, int x1, int x2, int x3, int y1, int y2, int y3, boolean visited){
+            super(checkpintId, 11);
+
+            this.x = (x1 + x2 + x3)/3;
+            this.y = (y1 + y2 + y3)/3;
+
+
+
+            arrX = new int[]{x1, x2, x3};
+            arrY = new int[]{y1, y2, y3};
             this.visited = visited;
+            this.type = calcType(x1, x2, x3, y1, y2, y3);
+
         }
+
+        private int calcType(int x1, int x2, int x3, int y1, int y2, int y3) {
+            if (x1 > x2 && x1 < x3 && y1 > y2 && y1 > y3){
+                return 0;
+            }
+            if (x1 < x2 && x1 < x3 && y1 > y2 && y1 < y3){
+                return 1;
+            }
+            if (x1 < x2 && x1 > x3 && y1 < y2 && y1 < y3){
+                return 2;
+            }
+            if (x1 > x2 && x1 > x3 && y1 < y2 && y1 > y3){
+                return 3;
+            }
+            return 0;
+        }
+
 
         public int getX() {
             return x;
         }
 
-        public void setX(int x) {
-            this.x = x;
-        }
-
         public int getY() {
             return y;
-        }
-
-        public void setY(int y) {
-            this.y = y;
         }
 
         public boolean isVisited() {
@@ -926,6 +943,42 @@ class Player {
         public void setVisited(boolean visited) {
             this.visited = visited;
         }
+
+        public boolean isInside(Entity e){
+            return isInside(e.getX(), e.getY());
+        }
+
+        public boolean isInside(int x, int y){
+            boolean inside = false;
+            int x1 = arrX[0];
+            int x2 = arrX[1];
+            int x3 = arrX[2];
+            int y1 = arrY[0];
+            int y2 = arrY[1];
+            int y3 = arrY[2];
+
+
+
+            return inside;
+        }
+
+        /*float sign (fPoint p1, fPoint p2, fPoint p3)
+        {
+            return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+        }
+
+        bool PointInTriangle (fPoint pt, fPoint v1, fPoint v2, fPoint v3)
+        {
+            bool b1, b2, b3;
+
+            b1 = sign(pt, v1, v2) < 0.0f;
+            b2 = sign(pt, v2, v3) < 0.0f;
+            b3 = sign(pt, v3, v1) < 0.0f;
+
+            return ((b1 == b2) && (b2 == b3));
+        }*/
+
+
     }
 
     public static class StunCounter{
@@ -963,4 +1016,3 @@ class Player {
         }
     }
 }
-

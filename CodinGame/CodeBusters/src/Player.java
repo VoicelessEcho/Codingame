@@ -1,5 +1,3 @@
-package ghostBusters;
-
 import java.util.*;
 
 /**

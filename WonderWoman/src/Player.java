@@ -90,7 +90,11 @@ class Player {
 
                     debugMsg(atype + " " + String.valueOf(index) + " " + dir1 + " " + dir2);
 
-                    LegalAction action = new LegalAction(atype, index, dir1, dir2);
+                    LegalAction action = new LegalAction(atype,
+                            index,
+                            dir1,
+                            dir2,
+                            atype + " " + String.valueOf(index) + " " + dir1 + " " + dir2);
                     availActions.add(action);
                     playerUnits.get(index).actions.add(action);
                 }
@@ -110,9 +114,40 @@ class Player {
     }
 
     private static String executeLogic(GridCell[][] grid, List<LegalAction> availActions, Map<Integer, Unit> playerUnits, Map<Integer, Unit> enemyUnits) {
+        Unit player = playerUnits.get(0);
+        GridCell playerCell = grid[player.x][player.y];
+        List<GridCell> thirdLevelCells = getThirdLevelCells(playerCell);
+        if (thirdLevelCells.size() != 0 && playerCell.h == 2){
+            return getLegalActionMoveToCell(playerCell, thirdLevelCells, availActions);
+        }
 
+        Random random = new Random();
+        LegalAction action = availActions.get(random.nextInt(availActions.size() - 1));
+        String s = action.whole + " Going random :D";
+        return s;
+    }
 
-        return "";
+    private static String getLegalActionMoveToCell(GridCell playerCell, List<GridCell> thirdLevelCells, List<LegalAction> availActions) {
+        GridCell nextCell = thirdLevelCells.get(0);
+        for (LegalAction action : availActions ) {
+            Dir dir = playerCell.getNextCellDirection(nextCell);
+            if (Dir.valueOf(action.dir1) == dir){
+                return action.whole;
+            }
+        }
+        return null;
+    }
+
+    private static List<GridCell> getThirdLevelCells(GridCell cell) {
+        List<GridCell> cellList = new ArrayList<>();
+        Map<Dir, GridCell> cellMap = cell.cellsNext;
+        for (Dir d : cellMap.keySet()) {
+            GridCell cellNext = cellMap.get(d);
+            if (cellNext.h == 3){
+                cellList.add(cellNext);
+            }
+        }
+        return cellList;
     }
 
     public static void debugMsg(Object msg){
@@ -277,6 +312,16 @@ class Player {
             this.unit = null;
             this.cellsNext = new HashMap<>();
         }
+
+        public Dir getNextCellDirection(GridCell cell){
+            for (Dir dir : cellsNext.keySet() ) {
+                GridCell c = cellsNext.get(dir);
+                if (c.x == cell.x && c.y == cell.y){
+                    return dir;
+                }
+            }
+            return  null;
+        }
     }
 
     public static class LegalAction{
@@ -284,12 +329,14 @@ class Player {
         public Integer unitId;
         public String dir1;
         public String dir2;
+        public String whole;
 
-        public LegalAction(String atype, Integer unitId, String dir1, String dir2) {
+        public LegalAction(String atype, Integer unitId, String dir1, String dir2, String whole) {
             this.atype = atype;
             this.unitId = unitId;
             this.dir1 = dir1;
             this.dir2 = dir2;
+            this.whole = whole;
         }
     }
 

@@ -1,10 +1,10 @@
 #	The Goal
-  Reach a height of 3 levels before your opponent.
+  Score more points than your opponent.
 # 	Rules
 
 The game is played on a square grid of a given size. Both players start with one unit placed randomly on the grid.
 
-Both players take it in turns to perform an action with their unit. To win the game, players must get their unit to climb up cells and reach a height of 3 levels.
+Both players take it in turns to perform an action with their unit. To score points, players must get a unit to climb up cells and reach a height of 3 levels.
 
 # The grid
 * Cells can be floors or holes. A floor is represented by an integer, a hole is represented by a dot (.). Holes are considered as outside the playable area.
@@ -14,18 +14,19 @@ Both players take it in turns to perform an action with their unit. To win the g
 * Each unit occupies a cell in the playable area of the grid and has the power to MOVE and then BUILD.
 * A unit may move to any neighboring cell, including diagonals. The unit may only move on the same level, step up one level or step down any number of levels.
 * After every movement, the unit must be able to build onto an adjacent cell of its new position. This causes the cell in question to gain 1 unit of height. If the height reaches level 4, the cell is considered removed from play.
-* If your unit moves onto a level 3 cell, you win the game.
+* If your unit moves onto a level 3 cell, you score 1 point.If you move several times on the same level 3 cell, you will score 1 point per movement on that cell.
 
 # Actions
 
 # Every turn, your unit must perform a valid pair of actions:
 * MOVE&BUILD: The unit moves in a given direction on the grid, then places an extra level on a neighboring cell.
 
-# Victory Conditions
-* Your unit reaches the third level.
+Providing an invalid action or taking too long to respond will cause you to be out of the game. However, you do not lose your points. 
 
-# Lose Conditions
-* You perform an invalid action or do not respond in time.
+The game is over once neither player can play. Note: the game may end early if only one player is in the game and they have the highest score.
+
+# Victory Conditions
+* Have more points than your opponent at the end of the game.
 
 ## 	Game Input
 
